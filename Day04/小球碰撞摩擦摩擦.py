@@ -5,27 +5,7 @@ from random import *
 import math
 
 '''
-播放音效： 使用pygame.mixer.Sound() 模块
-        ————play()              播放音效
-        ————stop()              停止播放
-        ————fadeout()           淡出
-        ————set_valume()        设置音量
-        ————get_valume()        获取音量
-        ————get_num_channels()  计算该音效播放了多少次
-        ————get_length()        获得该音效的长度
-        ————get_raw()           将该音效以二进制格式的字符串返回
-播放背景音：使用pygame.mixer.music() 
-        ————load()
-        ————play()
-        ————rewind()            重新播放
-        ————stop()
-        ————pause()
-        ————unpause()           恢复播放
-        ————fadeout()           淡出
-        ————set_volume()
-        ————queue()             将音乐文件放入待播放的列表中
-        ————set_endevent()      在播放完音乐的时候发送事件
-        ————get_endevent()      获取音乐播放完毕时发送的事件类型
+向界面中添加一个摩擦摩擦的地方
 '''
 
 class Ball(pygame.sprite.Sprite):
@@ -75,6 +55,21 @@ def collide_check(item, target):
             col_balls.append(each)
     return col_balls
 
+class Glass(pygame.sprite.Sprite):
+    def __init__(self, glass_image,mouse_image, bg_size):
+        #初始化动画精灵
+        pygame.sprite.Sprite.__init__(self)     # 记得添加self
+
+        self.glass_image = pygame.image.load(glass_image).convert_alpha()
+        self.glass_rect = self.glass_image.get_rect()
+        self.glass_rect.left, self.glass_rect.top = \
+            (bg_size[0]-self.glass_rect.width)//2, \
+            bg_size[1]-self.glass_rect.height
+
+        self.mouse_image = pygame.image.load(mouse_image).convert_alpha()
+        self.mouse_rect = self.mouse_image.get_rect()
+        self.mouse_rect.left,self.mouse_rect.top = self.glass_rect.left, self.glass_rect.top
+        pygame.mouse.set_visible(False)
 
 
 def main():
@@ -97,6 +92,8 @@ def main():
 
     ball_image = "gray_ball.png"
     bg_image = "background.png"
+    glass_image = "glass.png"
+    mouse_image = "hand.png"
 
     running = True
     bg_size = width, height = 1024, 681
@@ -119,7 +116,7 @@ def main():
             ball.rect.left, ball.rect.top = randint(0,width-100), randint(0, height -100)
         balls.append(ball)
         group.add(ball)
-
+    glass = Glass(glass_image, mouse_image, bg_size)
     # 设置游戏的帧率
     clock = pygame.time.Clock()
 
@@ -136,6 +133,20 @@ def main():
 
         # 将背景绘制在屏幕上
         screen.blit(background,(0,0))
+        screen.blit(glass.glass_image,glass.glass_rect)   # 每一帧都绘制一次玻璃面板
+        #先获取鼠标的位置
+        glass.mouse_rect.left, glass.mouse_rect.top = pygame.mouse.get_pos()
+        if glass.mouse_rect.left < glass.glass_rect.left:
+            glass.mouse_rect.left = glass.glass_rect.left
+        if glass.mouse_rect.left > glass.glass_rect.right - glass.mouse_rect.width:
+            glass.mouse_rect.left = glass.glass_rect.right - glass.mouse_rect.width
+        if glass.mouse_rect.top < glass.glass_rect.top:
+            glass.mouse_rect.top = glass.glass_rect.top
+        if glass.mouse_rect.top > glass.glass_rect.bottom - glass.mouse_rect.height:
+            glass.mouse_rect.top = glass.glass_rect.bottom - glass.mouse_rect.height
+       
+        screen.blit(glass.mouse_image, glass.mouse_rect)   # 每一帧都画一次鼠标的位置
+
         # 将五个小球绘制在屏幕之上
         for each in balls:
             each.move()
